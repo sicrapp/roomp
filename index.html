@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ประเมินความพึงพอใจห้องพักเจ้าหน้าที่</title>
+    <title>ประเมินความพึงพอใจ ห้องพักเจ้าหน้าที่</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -14,29 +14,17 @@
             transition: all 0.3s ease;
         }
         .rating-option:hover {
-            transform: scale(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
         }
         .rating-option.selected {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #22c55e, #16a34a);
             color: white;
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-        }
-        .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #10b981;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
         }
         .image-preview {
             position: relative;
-            display: inline-block;
-            margin: 8px;
         }
         .remove-image {
             position: absolute;
@@ -54,15 +42,90 @@
             font-size: 14px;
             font-weight: bold;
         }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #22c55e;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .success-animation {
+            animation: bounce 0.6s ease-in-out;
+        }
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% {
+                transform: translate3d(0,0,0);
+            }
+            40%, 43% {
+                transform: translate3d(0,-30px,0);
+            }
+            70% {
+                transform: translate3d(0,-15px,0);
+            }
+            90% {
+                transform: translate3d(0,-4px,0);
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-green-50 to-emerald-100 min-h-screen">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <div class="spinner mx-auto mb-4"></div>
+            <p class="text-gray-700 font-medium">กำลังบันทึกข้อมูล...</p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="loading-overlay hidden">
+        <div class="bg-white p-8 rounded-lg shadow-lg text-center max-w-sm mx-4">
+            <div class="text-6xl mb-4 success-animation">✅</div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">บันทึกสำเร็จ!</h3>
+            <p class="text-gray-600 mb-4">ขอบคุณสำหรับการประเมิน</p>
+            <button onclick="resetForm()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                ประเมินใหม่
+            </button>
+        </div>
+    </div>
+
+    <!-- Image Viewer Modal -->
+    <div id="imageViewerModal" class="loading-overlay hidden">
+        <div class="bg-white rounded-lg shadow-lg max-w-4xl max-h-[90vh] mx-4 overflow-hidden">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="imageViewerTitle" class="text-lg font-semibold text-gray-800"></h3>
+                <button onclick="closeImageViewer()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            <div class="p-4 max-h-[70vh] overflow-auto">
+                <img id="imageViewerImg" src="" alt="" class="w-full h-auto rounded-lg">
+            </div>
+        </div>
+    </div>
+
     <div class="container mx-auto px-4 py-6 max-w-md">
         <!-- Header -->
-        <div class="text-center mb-8">
-            <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                <h1 class="text-2xl font-semibold text-green-800 mb-2">ประเมินความพึงพอใจ</h1>
-                <p class="text-green-600 text-sm">ห้องพักเจ้าหน้าที่</p>
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div class="text-center">
+                <div class="text-4xl mb-3">🏢</div>
+                <h1 class="text-2xl font-semibold text-gray-800 mb-2">ประเมินความพึงพอใจ</h1>
+                <p class="text-gray-600">ห้องพักเจ้าหน้าที่</p>
             </div>
         </div>
 
@@ -70,259 +133,329 @@
         <form id="evaluationForm" class="space-y-6">
             <!-- ความสะอาด -->
             <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h3 class="text-lg font-medium text-green-800 mb-4 flex items-center">
-                    🧹 ความสะอาด
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="text-2xl mr-2">🧹</span>
+                    ความสะอาด
                 </h3>
-                <div class="grid grid-cols-5 gap-2">
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="cleanliness" data-value="5">
-                        <div class="text-xl mb-1">😍</div>
-                        <div class="text-xs font-medium text-green-800">มากที่สุด</div>
+                <div class="grid grid-cols-5 gap-1">
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('cleanliness', 'มากที่สุด', this)">
+                        <div class="text-base mb-1">😍</div>
+                        <div class="text-xs font-medium">มากที่สุด</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="cleanliness" data-value="4">
-                        <div class="text-xl mb-1">😊</div>
-                        <div class="text-xs font-medium text-green-800">มาก</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('cleanliness', 'มาก', this)">
+                        <div class="text-base mb-1">😊</div>
+                        <div class="text-xs font-medium">มาก</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="cleanliness" data-value="3">
-                        <div class="text-xl mb-1">😐</div>
-                        <div class="text-xs font-medium text-green-800">ปานกลาง</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('cleanliness', 'ปานกลาง', this)">
+                        <div class="text-base mb-1">😐</div>
+                        <div class="text-xs font-medium">ปานกลาง</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="cleanliness" data-value="2">
-                        <div class="text-xl mb-1">😕</div>
-                        <div class="text-xs font-medium text-green-800">น้อย</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('cleanliness', 'น้อย', this)">
+                        <div class="text-base mb-1">😕</div>
+                        <div class="text-xs font-medium">น้อย</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="cleanliness" data-value="1">
-                        <div class="text-xl mb-1">😞</div>
-                        <div class="text-xs font-medium text-green-800">ควรปรับปรุง</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('cleanliness', 'ควรปรับปรุง', this)">
+                        <div class="text-base mb-1">😞</div>
+                        <div class="text-xs font-medium">ควรปรับปรุง</div>
                     </div>
                 </div>
             </div>
 
             <!-- ความพร้อมใช้ของอุปกรณ์ -->
             <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h3 class="text-lg font-medium text-green-800 mb-4 flex items-center">
-                    🔧 ความพร้อมใช้ของอุปกรณ์
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="text-2xl mr-2">🔧</span>
+                    ความพร้อมใช้ของอุปกรณ์
                 </h3>
-                <div class="grid grid-cols-5 gap-2">
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="equipment" data-value="5">
-                        <div class="text-xl mb-1">😍</div>
-                        <div class="text-xs font-medium text-green-800">มากที่สุด</div>
+                <div class="grid grid-cols-5 gap-1">
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('equipment', 'มากที่สุด', this)">
+                        <div class="text-base mb-1">😍</div>
+                        <div class="text-xs font-medium">มากที่สุด</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="equipment" data-value="4">
-                        <div class="text-xl mb-1">😊</div>
-                        <div class="text-xs font-medium text-green-800">มาก</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('equipment', 'มาก', this)">
+                        <div class="text-base mb-1">😊</div>
+                        <div class="text-xs font-medium">มาก</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="equipment" data-value="3">
-                        <div class="text-xl mb-1">😐</div>
-                        <div class="text-xs font-medium text-green-800">ปานกลาง</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('equipment', 'ปานกลาง', this)">
+                        <div class="text-base mb-1">😐</div>
+                        <div class="text-xs font-medium">ปานกลาง</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="equipment" data-value="2">
-                        <div class="text-xl mb-1">😕</div>
-                        <div class="text-xs font-medium text-green-800">น้อย</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('equipment', 'น้อย', this)">
+                        <div class="text-base mb-1">😕</div>
+                        <div class="text-xs font-medium">น้อย</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="equipment" data-value="1">
-                        <div class="text-xl mb-1">😞</div>
-                        <div class="text-xs font-medium text-green-800">ควรปรับปรุง</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('equipment', 'ควรปรับปรุง', this)">
+                        <div class="text-base mb-1">😞</div>
+                        <div class="text-xs font-medium">ควรปรับปรุง</div>
                     </div>
                 </div>
             </div>
 
             <!-- ความพึงพอใจโดยรวม -->
             <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h3 class="text-lg font-medium text-green-800 mb-4 flex items-center">
-                    ⭐ ความพึงพอใจโดยรวม
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="text-2xl mr-2">⭐</span>
+                    ความพึงพอใจโดยรวม
                 </h3>
-                <div class="grid grid-cols-5 gap-2">
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="overall" data-value="5">
-                        <div class="text-xl mb-1">😍</div>
-                        <div class="text-xs font-medium text-green-800">มากที่สุด</div>
+                <div class="grid grid-cols-5 gap-1">
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('overall', 'มากที่สุด', this)">
+                        <div class="text-base mb-1">😍</div>
+                        <div class="text-xs font-medium">มากที่สุด</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="overall" data-value="4">
-                        <div class="text-xl mb-1">😊</div>
-                        <div class="text-xs font-medium text-green-800">มาก</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('overall', 'มาก', this)">
+                        <div class="text-base mb-1">😊</div>
+                        <div class="text-xs font-medium">มาก</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="overall" data-value="3">
-                        <div class="text-xl mb-1">😐</div>
-                        <div class="text-xs font-medium text-green-800">ปานกลาง</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('overall', 'ปานกลาง', this)">
+                        <div class="text-base mb-1">😐</div>
+                        <div class="text-xs font-medium">ปานกลาง</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="overall" data-value="2">
-                        <div class="text-xl mb-1">😕</div>
-                        <div class="text-xs font-medium text-green-800">น้อย</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('overall', 'น้อย', this)">
+                        <div class="text-base mb-1">😕</div>
+                        <div class="text-xs font-medium">น้อย</div>
                     </div>
-                    <div class="rating-option bg-green-50 border-2 border-green-200 rounded-xl p-2 cursor-pointer text-center" data-field="overall" data-value="1">
-                        <div class="text-xl mb-1">😞</div>
-                        <div class="text-xs font-medium text-green-800">ควรปรับปรุง</div>
+                    <div class="rating-option bg-gray-50 p-2 rounded-lg cursor-pointer border-2 border-transparent text-center" 
+                         onclick="selectRating('overall', 'ควรปรับปรุง', this)">
+                        <div class="text-base mb-1">😞</div>
+                        <div class="text-xs font-medium">ควรปรับปรุง</div>
                     </div>
                 </div>
             </div>
 
             <!-- ข้อเสนอแนะ -->
             <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h3 class="text-lg font-medium text-green-800 mb-4 flex items-center">
-                    💭 ข้อเสนอแนะ
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="text-2xl mr-2">💭</span>
+                    ข้อเสนอแนะ
                 </h3>
-                <textarea 
-                    id="suggestions" 
-                    rows="4" 
-                    class="w-full p-4 border-2 border-green-200 rounded-xl focus:border-green-500 focus:outline-none resize-none text-sm"
-                    placeholder="กรุณาแสดงความคิดเห็นหรือข้อเสนอแนะเพิ่มเติม..."
-                ></textarea>
+                <textarea id="suggestions" 
+                          class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none resize-none" 
+                          rows="4" 
+                          placeholder="กรุณาแสดงความคิดเห็นหรือข้อเสนอแนะ..."></textarea>
             </div>
 
             <!-- แนบรูปภาพ -->
             <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h3 class="text-lg font-medium text-green-800 mb-4 flex items-center">
-                    📷 แนบรูปภาพประกอบ
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="text-2xl mr-2">📷</span>
+                    แนบรูปภาพประกอบ
                 </h3>
-                <div>
-                    <input 
-                        type="file" 
-                        id="imageInput" 
-                        accept="image/*" 
-                        multiple 
-                        class="hidden"
-                    >
-                    <button 
-                        type="button" 
-                        onclick="document.getElementById('imageInput').click()" 
-                        class="w-full bg-green-100 border-2 border-dashed border-green-300 rounded-xl p-6 text-center hover:bg-green-200 transition-colors"
-                    >
-                        <div class="text-3xl mb-2">📸</div>
-                        <div class="text-green-700 font-medium">เลือกรูปภาพ</div>
-                        <div class="text-green-600 text-sm mt-1">รองรับไฟล์ภาพทุกนามสกุล</div>
-                        <div id="imagePreview" class="grid grid-cols-2 gap-3 mt-4"></div>
-                    </button>
+                
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 cursor-pointer hover:border-green-400 transition-colors" 
+                     onclick="document.getElementById('imageInput').click()">
+                    <input type="file" id="imageInput" multiple accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                    
+                    <div id="emptyState" class="text-center">
+                        <div class="text-4xl mb-2">📁</div>
+                        <p class="text-gray-600 mb-2">คลิกเพื่อเลือกรูปภาพ</p>
+                        <p class="text-sm text-gray-500">รองรับไฟล์ JPG, PNG, GIF</p>
+                    </div>
+
+                    <div id="imagePreviewContainer" class="grid grid-cols-3 gap-2 hidden"></div>
                 </div>
             </div>
 
             <!-- Submit Button -->
-            <div class="pt-4">
-                <button 
-                    type="submit" 
-                    id="submitBtn"
-                    class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium py-4 px-6 rounded-2xl shadow-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105"
-                >
-                    <span id="submitText">ส่งแบบประเมิน</span>
-                    <div id="loadingSpinner" class="loading-spinner mx-auto hidden"></div>
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    <span class="mr-2">📝</span>
+                    ส่งการประเมิน
                 </button>
             </div>
         </form>
-
-        <!-- Success Message -->
-        <div id="successMessage" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-2xl p-8 mx-4 text-center max-w-sm">
-                <div class="text-6xl mb-4">✅</div>
-                <h3 class="text-xl font-semibold text-green-800 mb-2">ส่งข้อมูลสำเร็จ!</h3>
-                <p class="text-green-600 mb-4">ขอบคุณสำหรับการประเมิน</p>
-                <button onclick="resetForm()" class="bg-green-500 text-white px-6 py-2 rounded-xl hover:bg-green-600 transition-colors">
-                    ประเมินใหม่
-                </button>
-            </div>
-        </div>
     </div>
 
     <script>
-        let selectedRatings = {};
-        let selectedImages = [];
+        const ratings = {
+            cleanliness: '',
+            equipment: '',
+            overall: ''
+        };
+        
+        let uploadedImages = [];
 
-        // Handle rating selection
-        document.querySelectorAll('.rating-option').forEach(option => {
-            option.addEventListener('click', function() {
-                const field = this.dataset.field;
-                const value = this.dataset.value;
-                
-                // Remove selected class from other options in the same field
-                document.querySelectorAll(`[data-field="${field}"]`).forEach(opt => {
-                    opt.classList.remove('selected');
-                });
-                
-                // Add selected class to clicked option
-                this.classList.add('selected');
-                
-                // Store the selection
-                selectedRatings[field] = value;
-            });
-        });
-
-        // Handle image selection
-        document.getElementById('imageInput').addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
+        function selectRating(category, value, element) {
+            // Remove selected class from all options in this category
+            const categoryElements = element.parentNode.querySelectorAll('.rating-option');
+            categoryElements.forEach(el => el.classList.remove('selected'));
             
-            files.forEach(file => {
+            // Add selected class to clicked element
+            element.classList.add('selected');
+            
+            // Store the rating
+            ratings[category] = value;
+        }
+
+        function handleImageUpload(event) {
+            const files = event.target.files;
+            
+            for (let file of files) {
                 if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         const imageData = {
                             name: file.name,
                             type: file.type,
-                            data: e.target.result.split(',')[1], // Remove data:image/...;base64, prefix
-                            preview: e.target.result
+                            data: e.target.result,
+                            base64: e.target.result.split(',')[1]
                         };
                         
-                        selectedImages.push(imageData);
-                        displayImagePreview();
+                        uploadedImages.push(imageData);
+                        displayImagePreview(imageData, uploadedImages.length - 1);
                     };
                     reader.readAsDataURL(file);
                 }
-            });
+            }
             
             // Reset input
-            this.value = '';
-        });
+            event.target.value = '';
+        }
 
-        function displayImagePreview() {
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '';
+        function displayImagePreview(imageData, index) {
+            const container = document.getElementById('imagePreviewContainer');
+            const emptyState = document.getElementById('emptyState');
             
-            selectedImages.forEach((image, index) => {
-                const div = document.createElement('div');
-                div.className = 'image-preview';
-                div.innerHTML = `
-                    <img src="${image.preview}" alt="${image.name}" class="w-full h-24 object-cover rounded-lg">
-                    <div class="remove-image" onclick="removeImage(${index})">×</div>
-                `;
-                preview.appendChild(div);
-            });
+            // Hide empty state and show container
+            emptyState.classList.add('hidden');
+            container.classList.remove('hidden');
+            
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'image-preview relative';
+            previewDiv.innerHTML = `
+                <div class="relative border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50 aspect-square cursor-pointer hover:border-green-400 transition-colors"
+                     onclick="event.stopPropagation(); viewImage('${imageData.data}', '${imageData.name}')">
+                    <img src="${imageData.data}" alt="${imageData.name}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all flex items-center justify-center">
+                        <div class="text-white opacity-0 hover:opacity-100 transition-opacity">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="remove-image" onclick="event.stopPropagation(); removeImage(${index})">×</div>
+                <p class="text-xs text-gray-500 mt-1 truncate">${imageData.name}</p>
+            `;
+            
+            container.appendChild(previewDiv);
         }
 
         function removeImage(index) {
-            selectedImages.splice(index, 1);
-            displayImagePreview();
+            uploadedImages.splice(index, 1);
+            refreshImagePreviews();
         }
 
-        // Handle form submission
+        function refreshImagePreviews() {
+            const container = document.getElementById('imagePreviewContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            container.innerHTML = '';
+            
+            if (uploadedImages.length === 0) {
+                // Show empty state if no images
+                emptyState.classList.remove('hidden');
+                container.classList.add('hidden');
+            } else {
+                // Show images
+                emptyState.classList.add('hidden');
+                container.classList.remove('hidden');
+                uploadedImages.forEach((imageData, index) => {
+                    displayImagePreview(imageData, index);
+                });
+            }
+        }
+
+        function viewImage(imageSrc, imageName) {
+            document.getElementById('imageViewerImg').src = imageSrc;
+            document.getElementById('imageViewerTitle').textContent = imageName;
+            document.getElementById('imageViewerModal').classList.remove('hidden');
+        }
+
+        function closeImageViewer() {
+            document.getElementById('imageViewerModal').classList.add('hidden');
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function showSuccess() {
+            document.getElementById('successModal').classList.remove('hidden');
+            
+            // Auto hide after 2 seconds and reset form
+            setTimeout(() => {
+                resetForm();
+            }, 2000);
+        }
+
+        function hideSuccess() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        function resetForm() {
+            // Reset ratings
+            Object.keys(ratings).forEach(key => ratings[key] = '');
+            
+            // Reset form elements
+            document.getElementById('evaluationForm').reset();
+            document.getElementById('suggestions').value = '';
+            
+            // Clear selected ratings
+            document.querySelectorAll('.rating-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Clear images
+            uploadedImages = [];
+            refreshImagePreviews();
+            
+            hideSuccess();
+        }
+
         document.getElementById('evaluationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Validate required fields
-            if (!selectedRatings.cleanliness || !selectedRatings.equipment || !selectedRatings.overall) {
+            if (!ratings.cleanliness || !ratings.equipment || !ratings.overall) {
                 alert('กรุณาประเมินให้ครบทุกหัวข้อ');
                 return;
             }
             
-            // Show loading state
-            const submitBtn = document.getElementById('submitBtn');
-            const submitText = document.getElementById('submitText');
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            
-            submitBtn.disabled = true;
-            submitText.classList.add('hidden');
-            loadingSpinner.classList.remove('hidden');
+            showLoading();
             
             try {
-                // Prepare data
                 const formData = new URLSearchParams();
-                formData.append('cleanliness', selectedRatings.cleanliness);
-                formData.append('equipment', selectedRatings.equipment);
-                formData.append('overall', selectedRatings.overall);
+                formData.append('cleanliness', ratings.cleanliness);
+                formData.append('equipment', ratings.equipment);
+                formData.append('overall', ratings.overall);
                 formData.append('suggestions', document.getElementById('suggestions').value);
                 formData.append('timestamp', new Date().toLocaleString('th-TH'));
                 
                 // Add images
-                if (selectedImages.length > 0) {
-                    formData.append('images', JSON.stringify(selectedImages));
+                if (uploadedImages.length > 0) {
+                    formData.append('images', JSON.stringify(uploadedImages));
                 }
                 
-                // Submit to Google Apps Script
                 const response = await fetch('https://script.google.com/macros/s/AKfycbyHmgO-UAYabkVRCzH4iaq5rrJDwkUTV-5zJ9sdZc7i7BR2LnmEgTETzPLqGS9d0zVWUg/exec', {
                     method: 'POST',
                     body: formData
@@ -330,45 +463,19 @@
                 
                 const result = await response.text();
                 
-                if (response.ok) {
-                    // Show success message
-                    document.getElementById('successMessage').classList.remove('hidden');
+                hideLoading();
+                
+                if (result.includes('success') || response.ok) {
+                    showSuccess();
                 } else {
-                    throw new Error('เกิดข้อผิดพลาดในการส่งข้อมูล');
+                    throw new Error('การส่งข้อมูลไม่สำเร็จ');
                 }
                 
             } catch (error) {
+                hideLoading();
                 alert('เกิดข้อผิดพลาด: ' + error.message);
-            } finally {
-                // Reset loading state
-                submitBtn.disabled = false;
-                submitText.classList.remove('hidden');
-                loadingSpinner.classList.add('hidden');
             }
         });
-
-        function resetForm() {
-            // Hide success message
-            document.getElementById('successMessage').classList.add('hidden');
-            
-            // Reset form
-            selectedRatings = {};
-            selectedImages = [];
-            
-            // Clear selections
-            document.querySelectorAll('.rating-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            
-            // Clear textarea
-            document.getElementById('suggestions').value = '';
-            
-            // Clear image preview
-            document.getElementById('imagePreview').innerHTML = '';
-            
-            // Scroll to top
-            window.scrollTo(0, 0);
-        }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96e571691050a1ae',t:'MTc1NTA1OTA2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96e62e92b5e5893f',t:'MTc1NTA2NjgxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
